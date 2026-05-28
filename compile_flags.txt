@@ -1,0 +1,2 @@
+-xcuda
+-I./include/
