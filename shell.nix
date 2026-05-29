@@ -5,7 +5,9 @@
 pkgs.mkShell {
   packages = with pkgs; [
     clang-tools
+    neocmakelsp
 
+    cmake
     gcc
     gdb
     stdenv.cc.cc.lib
