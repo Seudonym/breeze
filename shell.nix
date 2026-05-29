@@ -10,6 +10,7 @@ pkgs.mkShell {
     cmake
     gcc
     gdb
+    gtest
     stdenv.cc.cc.lib
 
     cudaPackages.cudatoolkit

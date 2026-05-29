@@ -30,3 +30,8 @@ target_compile_options(breeze
     $<$<COMPILE_LANGUAGE:CUDA>:-Wall>
 )
 
+enable_testing()
+find_package(GTest REQUIRED)
+
+add_subdirectory(tests)
+

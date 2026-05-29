@@ -1,5 +1,6 @@
 .direnv/
 result/
+build/
 .envrc
 *.out
 session.vim
