@@ -18,6 +18,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS)
 
 add_library(breeze
   src/tensor.cu
+  src/ops.cu
 )
 
 target_include_directories(breeze
