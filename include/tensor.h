@@ -8,6 +8,7 @@ template <typename T> class Tensor
 {
 public:
   Tensor (std::vector<size_t> shape);
+  Tensor (std::vector<T> data, std::vector<size_t> shape);
   ~Tensor ();
 
   Tensor (const Tensor &) = delete;

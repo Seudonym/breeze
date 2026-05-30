@@ -1,10 +1,8 @@
 #include "tensor.h"
-#include <algorithm>
 #include <cuda_runtime.h>
-#include <driver_types.h>
 #include <functional>
 #include <numeric>
-#include <ostream>
+#include <stdexcept>
 #include <vector>
 
 template <typename T>
@@ -14,6 +12,23 @@ Tensor<T>::Tensor (std::vector<size_t> shape) : shape_ (shape)
                                        std::multiplies<size_t> ());
   cudaMalloc (&data_, total_size * sizeof (T));
 }
+
+template <typename T>
+Tensor<T>::Tensor (std::vector<T> data, std::vector<size_t> shape)
+    : shape_ (shape)
+{
+  size_t total_size = std::accumulate (shape.begin (), shape.end (), 1,
+                                       std::multiplies<size_t> ());
+  ;
+  if (total_size != data.size ())
+    throw std::invalid_argument ("size mismatch");
+
+  const size_t size_in_bytes = total_size * sizeof (T);
+
+  cudaMalloc (&data_, size_in_bytes);
+  cudaMemcpy (data_, data.data (), size_in_bytes, cudaMemcpyHostToDevice);
+}
+
 template <typename T> Tensor<T>::~Tensor () { cudaFree (data_); }
 
 template <typename T>
