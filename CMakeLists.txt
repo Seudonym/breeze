@@ -14,6 +14,7 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
   set(CMAKE_CUDA_ARCHITECTURES native)
 endif()
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS)
 
 add_library(breeze
   src/tensor.cu
