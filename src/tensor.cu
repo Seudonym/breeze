@@ -1,8 +1,10 @@
 #include "tensor.h"
+#include <algorithm>
 #include <cuda_runtime.h>
-#include <cuda_runtime_api.h>
+#include <driver_types.h>
 #include <functional>
 #include <numeric>
+#include <ostream>
 #include <vector>
 
 template <typename T>
@@ -40,6 +42,28 @@ const std::vector<size_t> &
 Tensor<T>::shape () const
 {
   return this->shape_;
+}
+
+template <typename T>
+size_t
+Tensor<T>::size () const
+{
+  return std::accumulate (this->shape_.begin (), this->shape_.end (), 1,
+                          std::multiplies<size_t> ());
+}
+
+template <typename T>
+T *
+Tensor<T>::data ()
+{
+  return this->data_;
+}
+
+template <typename T>
+const T *
+Tensor<T>::data () const
+{
+  return this->data_;
 }
 
 template class Tensor<float>;
