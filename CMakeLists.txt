@@ -37,3 +37,6 @@ find_package(GTest REQUIRED)
 
 add_subdirectory(tests)
 
+add_executable(demo demo/main.cpp)
+target_link_libraries(demo PRIVATE breeze)
+

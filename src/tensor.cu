@@ -1,55 +1,46 @@
 #include "tensor.h"
 #include <cuda_runtime.h>
 #include <functional>
+#include <memory>
 #include <numeric>
 #include <stdexcept>
 #include <vector>
 
-template <typename T>
-Tensor<T>::Tensor (std::vector<size_t> shape) : shape_ (shape)
+struct CudaMallocDeleter
 {
-  size_t total_size = std::accumulate (shape.begin (), shape.end (), 1,
+  void
+  operator() (void *ptr) const
+  {
+    cudaFree (ptr);
+  }
+};
+
+template <typename T>
+Tensor<T>::Tensor (std::vector<size_t> shape) : shape_ (std::move (shape))
+{
+  size_t total_size = std::accumulate (shape_.begin (), shape_.end (), 1,
                                        std::multiplies<size_t> ());
-  cudaMalloc (&data_, total_size * sizeof (T));
+  T *raw_ptr;
+  cudaMalloc (&raw_ptr, total_size * sizeof (T));
+  data_ = std::shared_ptr<T> (raw_ptr, CudaMallocDeleter ());
 }
 
 template <typename T>
 Tensor<T>::Tensor (std::vector<T> data, std::vector<size_t> shape)
-    : shape_ (shape)
+    : shape_ (std::move (shape))
 {
-  size_t total_size = std::accumulate (shape.begin (), shape.end (), 1,
+  size_t total_size = std::accumulate (shape_.begin (), shape_.end (), 1,
                                        std::multiplies<size_t> ());
-  ;
   if (total_size != data.size ())
     throw std::invalid_argument ("size mismatch");
 
   const size_t size_in_bytes = total_size * sizeof (T);
 
-  cudaMalloc (&data_, size_in_bytes);
-  cudaMemcpy (data_, data.data (), size_in_bytes, cudaMemcpyHostToDevice);
-}
+  T *raw_ptr;
+  cudaMalloc (&raw_ptr, size_in_bytes);
+  cudaMemcpy (raw_ptr, data.data (), size_in_bytes, cudaMemcpyHostToDevice);
 
-template <typename T> Tensor<T>::~Tensor () { cudaFree (data_); }
-
-template <typename T>
-Tensor<T>::Tensor (Tensor &&other) noexcept
-    : data_ (other.data_), shape_ (other.shape_)
-{
-  other.data_ = nullptr;
-}
-
-template <typename T>
-Tensor<T> &
-Tensor<T>::operator= (Tensor<T> &&other) noexcept
-{
-  if (this != &other)
-    {
-      cudaFree (data_);
-      data_ = other.data_;
-      shape_ = std::move (other.shape_);
-      other.data_ = nullptr;
-    }
-  return *this;
+  data_ = std::shared_ptr<T> (raw_ptr, CudaMallocDeleter ());
 }
 
 template <typename T>
@@ -71,14 +62,14 @@ template <typename T>
 T *
 Tensor<T>::data ()
 {
-  return this->data_;
+  return this->data_.get ();
 }
 
 template <typename T>
 const T *
 Tensor<T>::data () const
 {
-  return this->data_;
+  return this->data_.get ();
 }
 
 template class Tensor<float>;
