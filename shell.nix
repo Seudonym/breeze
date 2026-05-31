@@ -13,27 +13,14 @@ pkgs.mkShell {
     gtest
     stdenv.cc.cc.lib
 
-    cudaPackages.cudatoolkit
-    cudaPackages.cudnn
+    cudaPackages.cuda_nvcc
+    cudaPackages.cuda_gdb
+    cudaPackages.cuda_cudart
   ];
 
   shellHook = ''
-    export CUDA_HOME=${cudaPackages.cudatoolkit}
-    export CUDA_PATH=${cudaPackages.cudatoolkit}
-    export PATH=${cudaPackages.cudatoolkit}/bin:$PATH
-    export LD_LIBRARY_PATH=${
-      pkgs.lib.makeLibraryPath [
-        pkgs.stdenv.cc.cc
-        cudaPackages.cudatoolkit
-        cudaPackages.cudnn
-      ]
-    }:/run/opengl-driver/lib:/run/opengl-driver-32/lib:$LD_LIBRARY_PATH
-    export LIBRARY_PATH=${
-      pkgs.lib.makeLibraryPath [
-        cudaPackages.cudatoolkit
-        cudaPackages.cudnn
-      ]
-    }:$LIBRARY_PATH
-    export CPATH=${cudaPackages.cudatoolkit}/include:$CPATH
+    export CUDA_HOME=${cudaPackages.cuda_cudart}
+    export CUDA_PATH=${cudaPackages.cuda_cudart}
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/run/opengl-driver/lib:/run/opengl-driver-32/lib
   '';
 }
