@@ -3,20 +3,17 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
-  outputs =
-    { nixpkgs, ... }:
-    let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        inherit system;
-        config = {
-          allowUnfree = true;
-          cudaSupport = true;
-        };
+  outputs = {nixpkgs, ...}: let
+    system = "x86_64-linux";
+    pkgs = import nixpkgs {
+      inherit system;
+      config = {
+        allowUnfree = true;
+        cudaSupport = true;
       };
-      cudaPackages = pkgs.cudaPackages;
-    in
-    {
-      devShells.x86_64-linux.default = import ./shell.nix { inherit pkgs cudaPackages; };
     };
+    cudaPackages = pkgs.cudaPackages_13_2;
+  in {
+    devShells.x86_64-linux.default = import ./shell.nix {inherit pkgs cudaPackages;};
+  };
 }
