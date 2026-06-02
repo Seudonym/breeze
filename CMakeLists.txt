@@ -23,13 +23,30 @@ add_library(breeze
 
 target_include_directories(breeze
   PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
 target_compile_options(breeze
   PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wpedantic>
     $<$<COMPILE_LANGUAGE:CUDA>:-Wall>
+)
+
+include(GNUInstallDirs)
+install(TARGETS breeze
+  EXPORT breeze-targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(EXPORT breeze-targets
+  FILE breeze-config.cmake
+  NAMESPACE breeze::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/breeze
 )
 
 enable_testing()

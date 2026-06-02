@@ -12,8 +12,9 @@
         cudaSupport = true;
       };
     };
-    cudaPackages = pkgs.cudaPackages_13_2;
+    cudaPackages = pkgs.cudaPackages;
   in {
-    devShells.x86_64-linux.default = import ./shell.nix {inherit pkgs cudaPackages;};
+    packages.${system} = import ./package.nix {inherit pkgs cudaPackages;};
+    devShells.${system} = import ./shell.nix {inherit pkgs cudaPackages;};
   };
 }
