@@ -72,6 +72,48 @@ divide_by_scalar_kernel (const T *left, T right, T *out_sum, size_t n)
 }
 
 template <typename T>
+std::ostream &
+operator<< (std::ostream &os, const Tensor<T> &tensor)
+{
+  size_t total_size = tensor.size ();
+  size_t preview_size = std::min (total_size, size_t{ 16 });
+
+  std::vector<T> host (preview_size);
+  cudaError_t err
+      = cudaMemcpy (host.data (), tensor.data (), preview_size * sizeof (T),
+                    cudaMemcpyDeviceToHost);
+
+  os << "Tensor(shape=[";
+  for (size_t i = 0; i < tensor.shape ().size (); ++i)
+    {
+      if (i > 0)
+        os << ", ";
+      os << tensor.shape ()[i];
+    }
+
+  os << "], values=[";
+  if (err == cudaSuccess)
+    {
+      for (size_t i = 0; i < preview_size; ++i)
+        {
+          if (i > 0)
+            os << ", ";
+          os << host[i];
+        }
+
+      if (preview_size < total_size)
+        os << ", ...";
+    }
+  else
+    {
+      os << "<cuda error: " << cudaGetErrorString (err) << ">";
+    }
+
+  os << "])";
+  return os;
+}
+
+template <typename T>
 Tensor<T>
 operator+ (const Tensor<T> &left, const Tensor<T> &right)
 {
@@ -204,6 +246,8 @@ operator== (const Tensor<T> &left, const Tensor<T> &right)
   return result;
 }
 
+template std::ostream &operator<< <float> (std::ostream &os,
+                                           const Tensor<float> &tensor);
 template Tensor<float> operator+ <float> (const Tensor<float> &left,
                                           const Tensor<float> &right);
 template Tensor<float> operator- <float> (const Tensor<float> &left,

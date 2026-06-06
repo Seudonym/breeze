@@ -8,8 +8,6 @@
       neocmakelsp
 
       cmake
-      gcc
-      gdb
       gtest
 
       cudaPackages.cudatoolkit

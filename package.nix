@@ -1,7 +1,6 @@
 {
   pkgs,
   cudaPackages,
-  ...
 }: {
   default = pkgs.stdenv.mkDerivation {
     pname = "breeze";
