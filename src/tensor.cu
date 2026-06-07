@@ -18,6 +18,14 @@ struct CudaMallocDeleter
 template <typename T>
 Tensor<T>::Tensor (std::vector<size_t> shape) : shape_ (std::move (shape))
 {
+  strides_.resize (shape_.size ());
+  size_t stride = 1;
+  for (size_t i = shape_.size (); i-- > 0;)
+    {
+      strides_[i] = stride;
+      stride *= shape_[i];
+    }
+
   size_t total_size = std::accumulate (shape_.begin (), shape_.end (), 1,
                                        std::multiplies<size_t> ());
   T *raw_ptr;
@@ -29,6 +37,14 @@ template <typename T>
 Tensor<T>::Tensor (std::vector<T> data, std::vector<size_t> shape)
     : shape_ (std::move (shape))
 {
+  strides_.resize (shape_.size ());
+  size_t stride = 1;
+  for (size_t i = shape_.size (); i-- > 0;)
+    {
+      strides_[i] = stride;
+      stride *= shape_[i];
+    }
+
   size_t total_size = std::accumulate (shape_.begin (), shape_.end (), 1,
                                        std::multiplies<size_t> ());
   if (total_size != data.size ())
@@ -48,6 +64,13 @@ const std::vector<size_t> &
 Tensor<T>::shape () const
 {
   return this->shape_;
+}
+
+template <typename T>
+const std::vector<size_t> &
+Tensor<T>::strides () const
+{
+  return this->strides_;
 }
 
 template <typename T>

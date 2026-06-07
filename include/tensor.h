@@ -12,6 +12,7 @@ public:
   Tensor (std::vector<T> data, std::vector<size_t> shape);
 
   const std::vector<size_t> &shape () const;
+  const std::vector<size_t> &strides () const;
   size_t size () const;
 
   T *data ();
@@ -20,4 +21,5 @@ public:
 private:
   std::shared_ptr<T> data_;
   std::vector<size_t> shape_;
+  std::vector<size_t> strides_;
 };
