@@ -17,4 +17,7 @@ template <typename T> Tensor<T> operator* (T left, const Tensor<T> &right);
 template <typename T> Tensor<T> operator/ (const Tensor<T> &left, T right);
 
 template <typename T>
+Tensor<T> mat_mul (const Tensor<T> &left, const Tensor<T> &right);
+
+template <typename T>
 bool operator== (const Tensor<T> &left, const Tensor<T> &right);

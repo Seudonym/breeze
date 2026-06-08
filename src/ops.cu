@@ -72,6 +72,54 @@ divide_by_scalar_kernel (const T *left, T right, T *out_sum, size_t n)
   out_sum[i] = left[i] / right;
 }
 
+// mat mul from here
+template <typename T>
+__global__ void
+mat_mul_contiguous (const T *left, const T *right, T *out_sum, size_t m,
+                    size_t k, size_t n)
+{
+  // left has a n, 1 stride
+  // right has a k, 1 stride
+  size_t row = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t col = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (row >= m || col >= n)
+    return;
+
+  T sum = 0;
+  for (size_t i = 0; i < k; i++)
+    {
+      sum += left[row * k + i] * right[i * n + col];
+    }
+
+  out_sum[col + row * n] = sum;
+}
+
+// mat mul launch
+template <typename T>
+Tensor<T>
+mat_mul (const Tensor<T> &left, const Tensor<T> &right)
+{
+  const auto left_shape = left.shape ();
+  const auto right_shape = right.shape ();
+  if (left_shape[1] != right_shape[0])
+    throw std::invalid_argument ("tensor shapes not appropriate for mat mul");
+
+  const size_t m = left_shape[0];
+  const size_t k = left_shape[1];
+  const size_t n = right_shape[1];
+
+  const dim3 block_size (16, 16);
+  const dim3 grid_size ((n - 1 + block_size.x) / block_size.x,
+                        (m - 1 + block_size.y) / block_size.y);
+
+  Tensor<T> result ({ m, n });
+
+  mat_mul_contiguous<<<grid_size, block_size>>> (left.data (), right.data (),
+                                                 result.data (), m, k, n);
+
+  return result;
+}
 // operator overloads with tensors
 template <typename T>
 Tensor<T>
@@ -260,6 +308,9 @@ operator<< (std::ostream &os, const Tensor<T> &tensor)
   os << "])";
   return os;
 }
+
+template Tensor<float> mat_mul<float> (const Tensor<float> &left,
+                                       const Tensor<float> &right);
 
 template Tensor<float> operator+ <float> (const Tensor<float> &left,
                                           const Tensor<float> &right);

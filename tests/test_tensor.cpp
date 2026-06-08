@@ -57,4 +57,13 @@ TEST (TensorTest, ElementWiseOps)
   ASSERT_EQ (half, diff * 0.5f);
 }
 
-TEST (TensorTest, DotProduct) {}
+TEST (TensorTest, MatMul)
+{
+  Tensor<float> left ({ 1, 2, 3, 4, 5, 6 }, { 2, 3 });
+
+  Tensor<float> right ({ 7, 8, 9, 10, 11, 12 }, { 3, 2 });
+
+  Tensor<float> expected ({ 58, 64, 139, 154 }, { 2, 2 });
+
+  ASSERT_EQ (expected, mat_mul (left, right));
+}
