@@ -2,6 +2,7 @@
 #include <cuda_runtime.h>
 #include <stdexcept>
 
+// kernels
 template <typename T>
 __global__ void
 add_kernel (const T *left, const T *right, T *out_sum, size_t n)
@@ -71,6 +72,7 @@ divide_by_scalar_kernel (const T *left, T right, T *out_sum, size_t n)
   out_sum[i] = left[i] / right;
 }
 
+// operator overloads with tensors
 template <typename T>
 Tensor<T>
 operator+ (const Tensor<T> &left, const Tensor<T> &right)
@@ -79,7 +81,7 @@ operator+ (const Tensor<T> &left, const Tensor<T> &right)
     throw std::invalid_argument ("tensor shapes must match for addition");
 
   const auto shape = left.shape ();
-  const size_t n = left.size ();
+  const size_t n = left.numel ();
 
   const size_t block_size = 256;
   const size_t grid_size = (n - 1 + block_size) / block_size;
@@ -100,7 +102,7 @@ operator- (const Tensor<T> &left, const Tensor<T> &right)
     throw std::invalid_argument ("tensor shapes must match for addition");
 
   const auto shape = left.shape ();
-  const size_t n = left.size ();
+  const size_t n = left.numel ();
 
   const size_t block_size = 256;
   const size_t grid_size = (n - 1 + block_size) / block_size;
@@ -121,7 +123,7 @@ operator* (const Tensor<T> &left, const Tensor<T> &right)
     throw std::invalid_argument ("tensor shapes must match for addition");
 
   const auto shape = left.shape ();
-  const size_t n = left.size ();
+  const size_t n = left.numel ();
 
   const size_t block_size = 256;
   const size_t grid_size = (n - 1 + block_size) / block_size;
@@ -135,11 +137,39 @@ operator* (const Tensor<T> &left, const Tensor<T> &right)
 }
 
 template <typename T>
+bool
+operator== (const Tensor<T> &left, const Tensor<T> &right)
+{
+  if (left.shape () != right.shape ())
+    return false;
+
+  const auto shape = left.shape ();
+  const size_t n = left.numel ();
+
+  const size_t block_size = 256;
+  const size_t grid_size = (n - 1 + block_size) / block_size;
+
+  bool *equal;
+  cudaMallocManaged (&equal, sizeof (bool));
+  *equal = true;
+
+  equality_kernel<<<grid_size, block_size>>> (left.data (), right.data (),
+                                              equal, n);
+  cudaDeviceSynchronize ();
+
+  bool result = *equal;
+  cudaFree (equal);
+
+  return result;
+}
+
+// operator overloads with scalars
+template <typename T>
 Tensor<T>
 operator* (const Tensor<T> &left, T right)
 {
   const auto shape = left.shape ();
-  const size_t n = left.size ();
+  const size_t n = left.numel ();
 
   const size_t block_size = 256;
   const size_t grid_size = (n - 1 + block_size) / block_size;
@@ -164,7 +194,7 @@ Tensor<T>
 operator/ (const Tensor<T> &left, T right)
 {
   const auto shape = left.shape ();
-  const size_t n = left.size ();
+  const size_t n = left.numel ();
 
   const size_t block_size = 256;
   const size_t grid_size = (n - 1 + block_size) / block_size;
@@ -178,37 +208,10 @@ operator/ (const Tensor<T> &left, T right)
 }
 
 template <typename T>
-bool
-operator== (const Tensor<T> &left, const Tensor<T> &right)
-{
-  if (left.shape () != right.shape ())
-    return false;
-
-  const auto shape = left.shape ();
-  const size_t n = left.size ();
-
-  const size_t block_size = 256;
-  const size_t grid_size = (n - 1 + block_size) / block_size;
-
-  bool *equal;
-  cudaMallocManaged (&equal, sizeof (bool));
-  *equal = true;
-
-  equality_kernel<<<grid_size, block_size>>> (left.data (), right.data (),
-                                              equal, n);
-  cudaDeviceSynchronize ();
-
-  bool result = *equal;
-  cudaFree (equal);
-
-  return result;
-}
-
-template <typename T>
 std::ostream &
 operator<< (std::ostream &os, const Tensor<T> &tensor)
 {
-  size_t total_size = tensor.size ();
+  size_t total_size = tensor.numel ();
   size_t preview_size = std::min (total_size, size_t{ 16 });
 
   // copy tensor device storage to host storage
