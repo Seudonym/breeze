@@ -1,5 +1,5 @@
-#include "ops.h"
-#include "tensor.h"
+#include "ops.cuh"
+#include "tensor.cuh"
 #include <iostream>
 #include <vector>
 

@@ -16,19 +16,16 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS)
 
-add_library(breeze
-  src/tensor.cu
-  src/ops.cu
-)
+add_library(breeze INTERFACE)
 
 target_include_directories(breeze
-  PUBLIC
+  INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
 target_compile_options(breeze
-  PRIVATE
+  INTERFACE
     $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wextra -Wpedantic>
     $<$<COMPILE_LANGUAGE:CUDA>:-Wall>
 )
@@ -54,6 +51,6 @@ find_package(GTest REQUIRED)
 
 add_subdirectory(tests)
 
-add_executable(demo demo/main.cpp)
+add_executable(demo demo/main.cu)
 target_link_libraries(demo PRIVATE breeze)
 

@@ -1,5 +1,5 @@
 add_executable(unit_tests
-  test_tensor.cpp
+  test_tensor.cu
 )
 
 target_link_libraries(unit_tests
