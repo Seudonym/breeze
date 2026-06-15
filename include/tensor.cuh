@@ -23,14 +23,7 @@ public:
   // constructors
   Tensor (std::vector<size_t> shape) : shape_ (std::move (shape))
   {
-    // initialize strides
-    strides_.resize (shape_.size ());
-    size_t stride = 1;
-    for (size_t i = shape_.size (); i-- > 0;)
-      {
-        strides_[i] = stride;
-        stride *= shape_[i];
-      }
+    recalc_strides_ ();
 
     size_t total_size = this->numel ();
     T *raw_ptr;
@@ -41,17 +34,11 @@ public:
   Tensor (std::vector<T> data, std::vector<size_t> shape)
       : shape_ (std::move (shape))
   {
-    strides_.resize (shape_.size ());
-    size_t stride = 1;
-    for (size_t i = shape_.size (); i-- > 0;)
-      {
-        strides_[i] = stride;
-        stride *= shape_[i];
-      }
+    recalc_strides_ ();
 
     size_t total_size = this->numel ();
     if (total_size != data.size ())
-      throw std::invalid_argument ("size mismatch");
+      throw std::invalid_argument ("shape mismatch");
 
     const size_t size_in_bytes = total_size * sizeof (T);
 
@@ -95,8 +82,35 @@ public:
                             std::multiplies<size_t> ());
   }
 
+  // transform
+  Tensor
+  reshape (std::vector<size_t> new_shape) const
+  {
+    size_t new_numel = std::accumulate (new_shape.begin (), new_shape.end (),
+                                        1, std::multiplies<size_t> ());
+
+    if (this->numel () != new_numel)
+      {
+        throw std::invalid_argument ("shape mismatch");
+      }
+
+    return Tensor (this->storage_, std::move (new_shape));
+  }
+
 private:
   std::shared_ptr<T> storage_;
   std::vector<size_t> shape_;
   std::vector<size_t> strides_;
+
+  void
+  recalc_strides_ ()
+  {
+    strides_.resize (shape_.size ());
+    size_t stride = 1;
+    for (size_t i = shape_.size (); i-- > 0;)
+      {
+        strides_[i] = stride;
+        stride *= shape_[i];
+      }
+  }
 };
