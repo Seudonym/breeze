@@ -216,7 +216,9 @@ mat_mul (const Tensor<T> &left, const Tensor<T> &right)
 
   Tensor<T> result ({ m, n });
 
-  mat_mul_contiguous_kernel<<<grid_size, block_size>>> (
+  // mat_mul_contiguous_kernel<<<grid_size, block_size>>> (
+  //     left.data (), right.data (), result.data (), m, k, n);
+  mat_mul_contiguous_shared_mem_kernel<<<grid_size, block_size>>> (
       left.data (), right.data (), result.data (), m, k, n);
 
   cudaDeviceSynchronize ();

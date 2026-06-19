@@ -91,5 +91,56 @@ mat_mul_contiguous_kernel (const T *left, const T *right, T *out, size_t m,
       sum += left[row * k + i] * right[i * n + col];
     }
 
-  out_sum[col + row * n] = sum;
+  out[col + row * n] = sum;
+}
+
+template <typename T>
+__global__ void
+mat_mul_contiguous_shared_mem_kernel (const T *left, const T *right, T *out,
+                                      size_t m, size_t k, size_t n)
+{
+  // allocate shared memory for the block
+  const size_t TILE_SIZE = 16;
+  __shared__ T tile_left[TILE_SIZE][TILE_SIZE];
+  __shared__ T tile_right[TILE_SIZE][TILE_SIZE];
+
+  // element idx for out
+  size_t row = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t col = blockIdx.x * blockDim.x + threadIdx.x;
+
+  // split the k dimension up evently based on tile size
+  size_t num_tiles = (k - 1 + TILE_SIZE) / TILE_SIZE;
+
+  // iterate over each tile
+  T sum = 0;
+  for (size_t tile_idx = 0; tile_idx < num_tiles; tile_idx++)
+    {
+      // loal left tile, left matrix has stride (k, 1)
+      if (row < m && (tile_idx * TILE_SIZE + threadIdx.x) < k)
+        tile_left[threadIdx.y][threadIdx.x]
+            = left[(tile_idx * TILE_SIZE + threadIdx.x) + row * k];
+      else
+        tile_left[threadIdx.y][threadIdx.x] = 0;
+
+      // load right tile, right matrix has stride (n, 1)
+      if (col < n && (tile_idx * TILE_SIZE + threadIdx.y) < k)
+        tile_right[threadIdx.y][threadIdx.x]
+            = right[col + (tile_idx * TILE_SIZE + threadIdx.y) * n];
+      else
+        tile_right[threadIdx.y][threadIdx.x] = 0;
+
+      // wait for tiles to be fully copied
+      __syncthreads ();
+
+      // multiply and accumulate loaded tiles
+      for (size_t i = 0; i < TILE_SIZE; i++)
+        {
+          sum += tile_left[threadIdx.y][i] * tile_right[i][threadIdx.x];
+        }
+
+      __syncthreads ();
+    }
+
+  if (row < m && col < n)
+    out[col + row * n] = sum;
 }
