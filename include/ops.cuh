@@ -22,6 +22,7 @@ operator+ (const Tensor<T> &left, const Tensor<T> &right)
   add_kernel<<<grid_size, block_size>>> (left.data (), right.data (),
                                          result.data (), n);
 
+  cudaDeviceSynchronize ();
   return result;
 }
 
@@ -42,6 +43,7 @@ operator- (const Tensor<T> &left, const Tensor<T> &right)
 
   subtract_kernel<<<grid_size, block_size>>> (left.data (), right.data (),
                                               result.data (), n);
+  cudaDeviceSynchronize ();
 
   return result;
 }
@@ -63,6 +65,7 @@ operator* (const Tensor<T> &left, const Tensor<T> &right)
 
   dot_kernel<<<grid_size, block_size>>> (left.data (), right.data (),
                                          result.data (), n);
+  cudaDeviceSynchronize ();
 
   return result;
 }
@@ -109,6 +112,7 @@ operator* (const Tensor<T> &left, T right)
 
   multiply_with_scalar_kernel<<<grid_size, block_size>>> (left.data (), right,
                                                           result.data (), n);
+  cudaDeviceSynchronize ();
 
   return result;
 }
@@ -134,6 +138,7 @@ operator/ (const Tensor<T> &left, T right)
 
   divide_by_scalar_kernel<<<grid_size, block_size>>> (left.data (), right,
                                                       result.data (), n);
+  cudaDeviceSynchronize ();
 
   return result;
 }
@@ -211,8 +216,10 @@ mat_mul (const Tensor<T> &left, const Tensor<T> &right)
 
   Tensor<T> result ({ m, n });
 
-  mat_mul_contiguous<<<grid_size, block_size>>> (left.data (), right.data (),
-                                                 result.data (), m, k, n);
+  mat_mul_contiguous_kernel<<<grid_size, block_size>>> (
+      left.data (), right.data (), result.data (), m, k, n);
+
+  cudaDeviceSynchronize ();
 
   return result;
 }

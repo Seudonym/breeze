@@ -98,13 +98,23 @@ public:
       throw std::invalid_argument ("shape mismatch");
 
     // return new tensor with different metadata
-    return Tensor (this->storage_, std::move (new_shape));
+    return Tensor (private_tag{}, this->storage_, new_shape);
   }
 
 private:
   std::shared_ptr<T> storage_;
   std::vector<size_t> shape_;
   std::vector<size_t> strides_;
+
+  struct private_tag
+  {
+  };
+
+  Tensor (private_tag, std::shared_ptr<T> storage, std::vector<size_t> shape)
+      : storage_ (storage), shape_ (std::move (shape))
+  {
+    recalc_strides_ ();
+  }
 
   void
   recalc_strides_ ()

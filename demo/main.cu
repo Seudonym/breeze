@@ -13,12 +13,12 @@ main ()
   std::cout << "Tensor A:" << std::endl;
   std::cout << a << std::endl;
 
-  Tensor<float> b = a;
-  std::cout << "\nTensor B (shallow copy of A):" << std::endl;
+  Tensor<float> b = a.reshape ({ 3, 2 });
+  std::cout << "\nTensor B:" << std::endl;
   std::cout << b << std::endl;
 
-  Tensor<float> c = a + b;
-  std::cout << "\nTensor C (A + B):" << std::endl;
+  Tensor<float> c = mat_mul (a, b);
+  std::cout << "\nTensor C (A @ B):" << std::endl;
   std::cout << c << std::endl;
 
   return 0;

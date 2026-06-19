@@ -1,7 +1,7 @@
 #pragma once
-#include "tensor.cuh"
 
 // kernels
+#include <cstddef>
 template <typename T>
 __global__ void
 add_kernel (const T *left, const T *right, T *out_sum, size_t n)
@@ -74,11 +74,11 @@ divide_by_scalar_kernel (const T *left, T right, T *out_sum, size_t n)
 // mat mul from here
 template <typename T>
 __global__ void
-mat_mul_contiguous (const T *left, const T *right, T *out_sum, size_t m,
-                    size_t k, size_t n)
+mat_mul_contiguous_kernel (const T *left, const T *right, T *out, size_t m,
+                           size_t k, size_t n)
 {
-  // left has a n, 1 stride
-  // right has a k, 1 stride
+  // left has a k, 1 stride
+  // right has a n, 1 stride
   size_t row = blockIdx.y * blockDim.y + threadIdx.y;
   size_t col = blockIdx.x * blockDim.x + threadIdx.x;
 
