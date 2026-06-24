@@ -86,10 +86,24 @@ public:
                             size_t{ 1 }, std::multiplies<size_t> ());
   }
 
+  bool
+  is_contiguous () const
+  {
+    size_t stride = 1;
+    for (size_t i = shape_.size (); i-- > 0;)
+      {
+        if (strides_[i] != stride)
+          return false;
+        stride *= shape_[i];
+      }
+    return true;
+  }
+
   // transform
   Tensor
   reshape (std::vector<size_t> new_shape) const
   {
+    // TODO: update to check contiguity
     // check if new shape is valid
     size_t new_numel
         = std::accumulate (new_shape.begin (), new_shape.end (), size_t{ 1 },
