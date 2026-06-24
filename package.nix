@@ -15,6 +15,7 @@
     buildInputs = [
       cudaPackages.cudatoolkit
       pkgs.gtest
+      pkgs.gbenchmark
     ];
 
     cmakeFlags = [

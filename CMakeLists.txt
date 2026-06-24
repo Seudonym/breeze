@@ -11,7 +11,7 @@ set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_EXTENSIONS OFF)
 
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-  set(CMAKE_CUDA_ARCHITECTURES native)
+    set(CMAKE_CUDA_ARCHITECTURES native)
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS)
@@ -48,8 +48,10 @@ install(EXPORT breeze-targets
 
 enable_testing()
 find_package(GTest REQUIRED)
+find_package(benchmark REQUIRED)
 
 add_subdirectory(tests)
+add_subdirectory(benchmarks)
 
 add_executable(demo demo/main.cu)
 target_link_libraries(demo PRIVATE breeze)

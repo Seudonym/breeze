@@ -9,6 +9,7 @@
 
       cmake
       gtest
+      gbenchmark
 
       cudaPackages.cudatoolkit
     ];
