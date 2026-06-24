@@ -67,3 +67,12 @@ TEST (TensorTest, MatMul)
 
   ASSERT_EQ (expected, mat_mul (left, right));
 }
+
+// TODO: make this better
+TEST (TensorTest, ReshapeAndContiguity)
+{
+  Tensor<float> left ({ 1, 2, 3, 4, 5, 6 }, { 2, 3 });
+
+  ASSERT_EQ (left, left.contiguous ());
+  ASSERT_EQ (left, left.reshape ({ 3, 2 }).reshape ({ 2, 3 }));
+}

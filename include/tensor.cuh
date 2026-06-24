@@ -1,4 +1,5 @@
 #pragma once
+#include "ops_kernels.cuh"
 #include <cstddef>
 #include <cuda_runtime.h>
 #include <functional>
@@ -6,6 +7,8 @@
 #include <numeric>
 #include <stdexcept>
 #include <vector>
+
+// TODO: account for empty shapes (scalars)
 
 // custom deleter for shared ptr
 struct CudaMallocDeleter
@@ -113,6 +116,41 @@ public:
 
     // return new tensor with different metadata
     return Tensor (private_tag{}, this->storage_, new_shape);
+  }
+
+  Tensor
+  contiguous () const
+  {
+    if (this->is_contiguous ())
+      return *this;
+
+    const auto shape = this->shape_;
+    const auto strides = this->strides_;
+    const auto numel = this->numel ();
+    const auto ndim = shape.size ();
+
+    size_t *d_shape, *d_strides;
+    cudaMalloc (&d_shape, ndim * sizeof (T));
+    cudaMemcpy (d_shape, shape.data (), ndim * sizeof (size_t),
+                cudaMemcpyHostToDevice);
+    cudaMalloc (&d_strides, ndim * sizeof (T));
+    cudaMemcpy (d_strides, strides.data (), ndim * sizeof (size_t),
+                cudaMemcpyHostToDevice);
+
+    const size_t block_size{ 256 };
+    const size_t grid_size{ (numel - 1 + block_size) / block_size };
+
+    Tensor<T> result (shape);
+
+    copy_nd_kernel<<<grid_size, block_size>>> (
+        result.data (), this->data (), d_shape, d_strides, ndim, numel);
+
+    cudaDeviceSynchronize ();
+
+    cudaFree (d_shape);
+    cudaFree (d_strides);
+
+    return result;
   }
 
 private:

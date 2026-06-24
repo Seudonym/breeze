@@ -71,6 +71,29 @@ divide_by_scalar_kernel (const T *left, T right, T *out_sum, size_t n)
   out_sum[i] = left[i] / right;
 }
 
+// copy kernel
+template <typename T>
+__global__ void
+copy_nd_kernel (T *dst, const T *src, const size_t *shape,
+                const size_t *src_strides, size_t ndim, size_t numel)
+{
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= numel)
+    return;
+
+  size_t accumulate = 0;
+  size_t remainder = i;
+  for (int i = ndim - 1; i >= 0; i--)
+    {
+      size_t coord = remainder % shape[i];
+      remainder /= shape[i];
+      accumulate += coord * src_strides[i];
+    }
+
+  // index by stride into src and set dst[i] to that
+  dst[i] = src[accumulate];
+}
+
 // mat mul from here
 template <typename T>
 __global__ void
